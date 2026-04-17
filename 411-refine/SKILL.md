@@ -1,7 +1,7 @@
 ---
 name: 411-refine
 description: >
-  Verifies and refines research output from /411-research. Re-fetches URLs, cross-checks facts, resolves source conflicts, recalibrates confidence scores, assigns Verified/Estimate reliability labels, produces a hardened final report, and generates a .docx bibliography via /docx. Use after /411-research to validate findings before feeding into /411-case.
+  Verifies and refines research output from /411-research. Re-fetches URLs, cross-checks facts, resolves source conflicts, recalibrates confidence scores, assigns Verified/Estimate reliability labels, produces a hardened final report, and generates a .docx bibliography via /docx. Use when validating /411-research output before feeding into /411-case.
 ---
 
 # 411 Refine Skill
@@ -97,6 +97,8 @@ Flag a source as potentially AI-generated if:
 When flagged: `AI-CONTENT SUSPECTED: [reason]`, confidence → 1, reliability → `Estimate`.
 
 ## Output Format
+
+**Rendering contract — non-negotiable.** Your response to the user MUST contain all seven numbered sections below, rendered inline in the chat response itself (not merely "done" or "see attached"). Do not collapse sections into a summary paragraph, do not defer rendering to a file, and do not say "audit complete" without the sections beneath it. An executive-summary-only reply fails this skill's contract even if the verification work was performed correctly. If the audit halts early (malformed input), render at least §I (reason for halt) and §VII (required next action) — the other sections may be omitted with an explicit "N/A — halted at Phase 1" note.
 
 ### I. Verification Dashboard
 

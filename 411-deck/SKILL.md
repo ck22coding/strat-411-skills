@@ -21,33 +21,47 @@ This skill takes a structured deck spec (produced by the `411-case` skill) and p
 
 ---
 
-## Phase 1: Parse Handoff
+## Phase 1: Parse & Verify Signature
 
-Announce: "Starting Phase 1: Parsing the deck spec."
+Announce: "Starting Phase 1: Parsing the deck spec and verifying the /411-case signature."
+
+**Trust model:** The argument's structural integrity (leadline phrasing, horizontal story, implication quality, recommendation completeness) is enforced upstream in `/411-case` Phase 3 Step 5, Phase 4 Step 2, Phase 4.5 TA review, and Phase 6 Step 6. `/411-case` Phase 6 Step 4 signs the handoff by writing a sha256 content hash into the deck-spec frontmatter. This skill does NOT re-check argument structure — it verifies the signature to confirm the deck-spec hasn't been edited since /411-case signed off.
 
 ### Step 1: Read the Spec
 
 Read the handoff markdown file provided by the user. Extract:
 
-1. **YAML frontmatter** — `case_name`, `recommendation_format`, `scqa` (situation, complication, question, answer), `key_line`, `structure` (inductive/deductive), `plural_noun`, `argument_flow` (list of leadline summaries), `sensitivity_slides` (list of slide numbers)
+1. **YAML frontmatter** — `case_name`, `recommendation_format`, `scqa` (situation, complication, question, answer), `key_line`, `structure` (inductive/deductive), `plural_noun`, `argument_flow`, `sensitivity_slides`, `validation` block
 2. **Argument Summary** — the numbered leadline story
-3. **Per-slide sections** — each slide's fields: position, leadline, chart type, chart title, data table, axis labels, data labels, callout title, callout items, footnotes, source, formatting notes
+3. **Per-slide sections** — position, leadline, chart type, chart title, data table, axis labels, data labels, callout title, callout items, footnotes, source, formatting notes
 4. **Recommendation slide** — leadline, format, recommendation, supporting reasons, key risks, next steps
 
-### Step 2: Validate
+### Step 2: Verify Signature
 
-Check every slide for required fields:
-- Leadline (must be an analytical statement, not a label)
+Run: `python3 ~/.claude/skills/411-case/scripts/deck_signature.py --verify <path-to-deck-spec.md>`
+
+Exit codes:
+- **0 (status: ok)** — signature valid, content_hash matches. Proceed silently to Step 3.
+- **1 (status: missing)** — no `validation` block in frontmatter. This likely means the spec was hand-authored or produced by a pre-signature version of /411-case. Use `AskUserQuestion`: "This deck-spec has no /411-case signature. Build anyway without structural validation?" Only proceed if the user explicitly says yes. Log the decision in the final QA report.
+- **2 (status: mismatch)** — signature present but hash doesn't match. The deck-spec was edited after /411-case signed off. Report the diff (stored_hash vs current_hash) from the script's output. Use `AskUserQuestion` with three options: (a) **Rebuild** — ask user to re-run /411-case Phase 6 Step 4 to re-sign, then re-invoke this skill; (b) **Build anyway** — trust the edits and proceed, log in QA report; (c) **Abort** — halt and exit.
+- **3 (status: malformed)** — spec file is missing frontmatter or structurally broken. Halt, report the parser error, do NOT call AskUserQuestion — the user must fix the spec before any rebuild makes sense.
+
+Do NOT proceed to Step 3 unless the signature is verified or the user explicitly waived verification.
+
+### Step 3: Technical Field Check
+
+Check every slide for the technical fields needed to render (this is NOT argument validation — argument was validated by /411-case; this is "does the spec have the bytes we need to build a .pptx?"):
 - Chart type
 - Data (table or description)
+- Axis labels (when chart type requires them)
 - Source line
-- At least one callout item
 
-Flag any gaps to the user with specific slide numbers and missing fields. Do not proceed until gaps are resolved or the user explicitly accepts them.
+Flag any missing technical fields by slide number. Unlike argument defects, technical gaps are usually typos or incomplete spec generation — ask the user to fix them in the spec and re-sign, or accept and proceed with rendering gaps flagged.
 
-### Step 3: Present Summary
+### Step 4: Present Summary
 
 Tell the user:
+- "Signature: [valid / missing / mismatched (diff summary) / waived by user]"
 - "Found N slides. Argument flow:"
 - List all leadlines in order (numbered)
 - "Ready to build?"
@@ -145,15 +159,19 @@ Announce: "Starting Phase 4: Quality checks."
 
 Use `markitdown` (via the pptx skill's standard process) to extract text from the produced `.pptx` and verify content accuracy.
 
-### Step 2: 411-Specific Checks
+### Step 2: Rendering Fidelity Checks
 
-Run each of these checks and report results:
+This phase verifies that the produced .pptx faithfully materializes what the spec describes. Argument-structure checks (leadline phrasing, horizontal story, implication quality) are NOT performed here — they were enforced upstream in /411-case and confirmed by the Phase 1 signature verification.
 
-1. **Leadline horizontal story test** — Read all leadlines in order. Do they tell a coherent, connected argument? Flag any that break the logical flow.
-2. **Implication quality** — Every callout item must be a strategic conclusion, not a data restatement. Flag items that just repeat what the chart shows without saying "so what."
-3. **Source line coverage** — Every data slide must have a source line. Flag any missing.
-4. **Sensitivity slide compliance** — Every slide in `sensitivity_slides` must show a range of outcomes. Flag any that show only a single point estimate.
-5. **Recommendation slide completeness** — Must have: recommendation statement, supporting reasons, key risks. Flag missing elements.
+Run each of these rendering checks and report results:
+
+1. **Template zone population** — Every data slide must contain all 6 template zones rendered: leadline (top), graph title (on chart), chart (center), callout section (right), footnotes (bottom), source line (bottom). Flag missing zones by slide number + missing zone name.
+2. **Verbatim content match** — Leadline text, callout items, footnotes, and source line in the rendered .pptx must match the spec verbatim. Flag any text drift.
+3. **Chart data fidelity** — Chart axis labels, categories, and values must match the spec's data table exactly (same row/column count, same values). Off-by-one errors (e.g., 4 x-axis labels but 3 data values) are a common failure.
+4. **Sensitivity rendering** — Every slide listed in `sensitivity_slides` must render a range of outcomes (scenario bands, tornado, or sensitivity table) in the .pptx. Flag any that rendered as a single point estimate.
+5. **Source line cleanliness** — Every data slide must have a source line in the form "Source: [specific source], [year]"; no source line may contain internal tool references ("see 411-refine", "per autoresearch run").
+6. **Placeholder scan** — Scan all rendered text for unfilled placeholders (`~X%`, `$X`, `[TBD]`, `<value>`). Flag any remaining.
+7. **Superscript integrity** — Every numbered superscript in body text must have a matching numbered footnote at the bottom of the same slide, and vice versa.
 
 ### Step 3: Fix and Verify
 

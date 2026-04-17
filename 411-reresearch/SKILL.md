@@ -63,24 +63,11 @@ Present this to the user before proceeding. Ask: "These are the sources that nee
 
 For each failed source, select a search strategy that **differs from the original research**. The original `/411-research` uses three query angles: direct, specific/technical, verification. You must use different approaches.
 
-### Differentiation Matrix
+**Load `references/strategy-matrix.md`** for the 8 available strategies, the selection heuristic (match strategy to failure reason), iteration-based escalation rules, and the hard rules on query reuse and minimum strategy count per P1.
 
-| Strategy | Description | When to Use |
-|----------|-------------|-------------|
-| **Lateral Source Discovery** | Search for the CLAIM (the fact/stat itself), not the source. Find who else published it. | URL dead or claim not found — the data may exist elsewhere |
-| **Upstream Tracing** | The failed source cited someone else. Find the original study, filing, or dataset. | Tier 2-3 source that can't be verified; trace upstream to Tier 1 |
-| **Domain-Specific Databases** | Use site-specific searches: `site:sec.gov`, `site:bls.gov`, `site:census.gov`, `site:scholar.google.com`, EDGAR, PACER | Original research used general web searches |
-| **Temporal Pivoting** | Search different time windows. A 2024 stat may appear in a 2025 annual review, earnings call, or year-in-review article. | Date-bounded search returned nothing |
-| **Synonym/Reformulation** | Restate the claim using industry jargon, alternative metrics, or proxy measures. | Standard terminology failed to surface results |
-| **Archive Recovery** | Use web.archive.org / Wayback Machine to recover dead URLs. | URL Status = DEAD specifically |
-| **Inverse Search** | Search for REBUTTALS or criticism of the claim. If critics cite it, that proves it exists and gives you the real source. | AI-content suspected or unverifiable claims |
-| **Adjacent Data** | When the exact stat is unavailable, find the closest available proxy and flag as Estimate. | After primary strategies exhaust — last resort |
+Document which strategy you picked for each failed source and why — the next `/411-refine` pass will evaluate whether your replacement is genuinely independent of the original.
 
-### Hard Rules
-
-- **Do NOT reuse search queries** from the original `/411-research` Research Notes. If the original notes are available, read them and avoid duplicates.
-- **Document which strategy you selected** for each failed source and why. The next `/411-refine` pass needs to evaluate whether your replacement is genuinely independent.
-- **Try at least 2 strategies per P1 failure** before declaring UNFILLABLE.
+**Reporting rule for P1 failures:** In the Replacement Map (Step 4), the "Strategy Used" column for every P1 row must list **≥2 matrix strategy names** (comma-separated). Narrating a secondary strategy in Research Notes is not sufficient — the Map row itself must show the differentiation. Example: `Strategy Used: Lateral Source Discovery, Domain-Specific DB`. P2/P3 rows may list a single strategy.
 
 ## Step 3: Targeted Search Execution
 
@@ -117,26 +104,15 @@ Use the same scale as `/411-research`:
 
 ## Step 4: Replacement Mapping
 
-Build the Replacement Map linking each failed source to its resolution:
+Build the Replacement Map linking each failed source to its resolution. Each entry gets one of five **Status values**:
 
-```
-REPLACEMENT MAP
-═══════════════════════════════════════
-| Failed ID | Failed Data Point | Failure Reason | New ID | New Data Point | New Source | Strategy Used | Claim Impact | Status |
-|:----------|:------------------|:---------------|:-------|:---------------|:-----------|:-------------|:-------------|:-------|
-| S04 | "Market size $74B" | DEAD URL | S36 | "Market size $32B (2024)" | IBIS Report | Domain-Specific DB | Figure corrected $74B→$32B; L0 bullet revised | REPLACED |
-| S07 | "60% adoption" | SINGLE SOURCE | S37 | "58% adoption" | Gartner 2025 | Lateral Discovery | Corroborates original; now has independent backup | CORROBORATED |
-| S12 | "Patent filed 2024" | CLAIM NOT FOUND | — | — | — | Upstream + Archive | No patent in USPTO; claim appears fabricated | UNFILLABLE |
-═══════════════════════════════════════
-```
+- **REPLACED** — New source found providing the same or equivalent data point
+- **CORROBORATED** — Original claim confirmed from an independent source (upgrades single-source claims)
+- **UPDATED** — Data found, but the figure or fact differs from the original
+- **UNFILLABLE** — Exhaustive search failed (see Step 5 for justification requirements)
+- **DOWNGRADED** — Only a lower-tier or Estimate-quality replacement available
 
-### Status Values
-
-- **REPLACED** — New source found that provides the same or equivalent data point. Replaces the failed source.
-- **CORROBORATED** — Original claim confirmed from an independent source. Upgrades single-source claims.
-- **UPDATED** — Found the data, but the figure or fact differs from the original. Note the change.
-- **UNFILLABLE** — Exhaustive search failed. Claim should be dropped. Justification required (Step 5).
-- **DOWNGRADED** — Could only find a lower-tier or Estimate-quality replacement. Better than nothing but weaker than original.
+**Load `references/output-format.md`** for the full table schema (columns, example rows, source ID continuity rules, and how the Replacement Map appears in the final output).
 
 ## Step 5: UNFILLABLE Declaration
 
@@ -145,7 +121,7 @@ When a claim cannot be sourced after reasonable search effort:
 1. **State what was tried** — List every strategy attempted and every query run
 2. **Explain why it failed** — Is the data proprietary? Too niche? Fabricated by the original source? Simply doesn't exist?
 3. **Assess the impact** — How does losing this claim affect the analysis?
-4. **Propose a rewrite** — Suggest how L0/L1 should be revised to not depend on the missing data. Options:
+4. **Propose a rewrite** — Suggest how L0/L1 should be revised to not depend on the missing data:
    - Remove the claim entirely
    - Replace with a weaker but available proxy (flagged as Estimate)
    - Reframe the argument to not require the specific data point
@@ -153,107 +129,28 @@ When a claim cannot be sourced after reasonable search effort:
 
 ## Step 6: Compile Output
 
-### Source ID Continuity
+Assemble the final report following the structure defined in **`references/output-format.md`**:
 
-Parse the maximum source ID from the input ledger (e.g., if the ledger goes to S35, new sources start at S36). **Never overwrite or reuse original IDs.** The audit trail must show old and new sources side by side.
-
-### Output Format
-
-```
-# 411 Re-Research: [Topic/Case Name]
-## Iteration [N] — Targeted Gap-Fill
-```
-
-#### Replacement Map
-The table from Step 4.
-
-#### Convergence Status
-The dashboard from the Convergence Criteria section below.
-
----
-
-#### L0 — Key Findings (Replacement Sources Only)
-
-3-5 bullet points summarizing what was found to replace or corroborate failed sources. Bold key figures. Flag any UNFILLABLE claims and their impact.
-
----
-
-#### L1 — Detailed Analysis (Gap-Fill Narrative)
-
-One subsection per failed source, grouped by assumption. Use this structure:
-
-```
-#### Replacing S04: [Original Data Point]
-Failure: [reason from refine — e.g., "URL dead, confidence dropped 4→1"]
-Strategy: [which strategies were tried]
-Finding: [narrative with new [S36]-style citations]
-Claim impact: [same data confirmed / figure updated from X→Y / claim dropped]
-```
-
-For UNFILLABLE claims:
-```
-#### S12: UNFILLABLE — [Original Data Point]
-Failure: [reason]
-Strategies attempted: [list]
-Why unfillable: [explanation]
-Impact: [what the analysis loses]
-Proposed rewrite: [how to revise L0/L1 to not depend on this]
-```
-
----
-
-#### L2 — Replacement Source Ledger & Research Notes
-
-**Replacement Source Ledger:**
-
-Same columns as `/411-research` output. IDs continue the sequence. Notes column includes the mapping (e.g., "Replaces S04").
-
-| ID | Data Point | Source Name | Source URL | Date Accessed | Assumption | Tier | Confidence | Reliability | Context | Notes |
-|:---|:-----------|:------------|:-----------|:--------------|:-----------|:-----|:-----------|:------------|:--------|:------|
-| S36 | [fact] | [attribution] | [URL] | YYYY-MM-DD | [assumption] | [tier] | [1-5] | [Verified/Estimate — justification] | "[context]" | Replaces S04. Strategy: Domain-Specific DB. |
-
-**Research Notes:**
-
-- **Search Queries Used:** List every query, grouped by failed source ID. Mark which strategy each query belongs to.
-- **Original Queries Avoided:** List the queries from the original `/411-research` that you deliberately did NOT reuse.
-- **Sources Examined but Rejected:** With reasons.
-- **Strategies Attempted per Failed Source:** Which strategies from the matrix were tried for each source.
-- **UNFILLABLE Claims:** Summary list with one-line justifications.
-- **Recommended Follow-up:** Any remaining issues for the next iteration or for the user.
+- Header (topic + iteration number)
+- Replacement Map (from Step 4)
+- Convergence Status dashboard (see Convergence Criteria below)
+- **L0** — Key Findings (3-5 bullets on replacements and UNFILLABLE impacts)
+- **L1** — Detailed Analysis, one subsection per failed source (standard + UNFILLABLE templates both in the reference)
+- **L2** — Replacement Source Ledger (IDs continue from max original ID — never overwrite) and Research Notes (queries used, queries avoided, rejected sources, strategies attempted, UNFILLABLE summary)
+- **Residual Risk** section — only on iteration 3's final pass; feeds into `/411-case` Phase 6
 
 ## Convergence Criteria
 
-Produce this dashboard at the end of every output:
+At the end of every iteration, produce the convergence dashboard defined in **`references/convergence-dashboard.md`**. The dashboard reports totals, L0/L1 coverage, and 6 pass criteria:
 
-```
-CONVERGENCE STATUS — Iteration [N]
-═══════════════════════════════════════
-Total claims in original ledger:    X
-Claims passing refine (conf 3+):    X  (X%)
-Claims failing refine:              X
-  - Replaced this iteration:        X
-  - Corroborated this iteration:    X
-  - Marked UNFILLABLE:              X
-  - Still open (carry to next):     X
+1. All L0 findings backed by conf 3+ source
+2. Every assumption has ≥2 independent sources (or 1 Tier 1)
+3. No DEAD/CLAIM NOT FOUND URLs remain
+4. Zero AI-content flags
+5. All UNFILLABLE claims removed from L1 narrative
+6. Verified rate ≥ 60%
 
-L0 coverage:  X/X key findings fully sourced
-L1 coverage:  X/X assumptions have >=1 conf 4+ source
-
-PASS CRITERIA:
-  [ ] All L0 findings backed by conf 3+ source
-  [ ] Every assumption has >=2 independent sources (or 1 Tier 1)
-  [ ] No DEAD/CLAIM NOT FOUND URLs remain
-  [ ] Zero AI-content flags
-  [ ] All UNFILLABLE claims removed from L1 narrative
-  [ ] Verified rate >= 60%
-
-VERDICT: [CONVERGED / NOT CONVERGED — X criteria failing]
-═══════════════════════════════════════
-```
-
-When all six criteria pass, the loop terminates with **CONVERGED** status.
-
-When NOT CONVERGED, state which criteria still fail and what the next iteration should focus on.
+Verdict: **CONVERGED** when all 6 pass, **NOT CONVERGED** otherwise. On iteration 3 hard stop, declare **CONVERGED WITH CAVEATS** and document remaining gaps in Residual Risk. Full counting rules and verdict logic live in the reference file.
 
 ## Iteration Management
 
@@ -263,7 +160,7 @@ This skill may be invoked multiple times in a loop (reresearch → refine → re
 - **Iteration 2:** Escalated — proxy data accepted, adjacent metrics considered, Estimate reliability acceptable for P2/P3 claims. Focus remaining effort on P1 failures only.
 - **Iteration 3:** Final pass. All remaining failures declared UNFILLABLE with full justification. Produce a **Residual Risk** section explaining what the analysis cannot prove and how this affects the recommendation. This section feeds into `/411-case` Phase 6 (Validation & Synthesis).
 
-**Hard stop:** After iteration 3, declare convergence with caveats regardless of criteria status. The Convergence Dashboard shows which criteria still fail and the Residual Risk section documents the impact.
+**Hard stop:** After iteration 3, declare convergence with caveats regardless of criteria status. Do not invoke a fourth iteration.
 
 **Iteration detection:** Check the input for prior Replacement Maps or "Iteration [N]" headers. If found, increment the iteration counter. If not found, this is iteration 1.
 

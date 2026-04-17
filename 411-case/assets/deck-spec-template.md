@@ -21,6 +21,19 @@ argument_flow:
   - "Leadline 2 summary"
   - "Leadline 3 summary"
 sensitivity_slides: [4, 7]
+# validation block is written by scripts/deck_signature.py --sign at the end of Phase 6 Step 4.
+# Do NOT hand-author this block. /411-deck Phase 1 reads it to verify the argument hasn't
+# been edited since /411-case signed off. Hashed fields: argument_flow, per-slide leadlines,
+# per-slide callout_items, and the recommendation (statement + reasons + risks + next steps).
+# Technical fields (chart type, data tables, axis labels, footnotes, sources, formatting
+# notes) are intentionally NOT hashed — they can be tweaked post-signature without
+# invalidating the signature.
+validation:
+  validated: true
+  validated_at: "2026-04-17T14:30:00Z"
+  validated_by: "411-case@1.0.0"
+  content_hash: "sha256:<computed by scripts/deck_signature.py>"
+  hashed_fields: [argument_flow, leadlines, callout_items, recommendation]
 ---
 
 # Deck Spec: Company X Strategic Response
