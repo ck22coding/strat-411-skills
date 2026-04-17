@@ -168,7 +168,7 @@ This skill may be invoked multiple times in a loop (reresearch → refine → re
 
 After producing your output, tell the user:
 
-> "Feed this output into `/411-refine` for re-verification. `/411-refine` should receive BOTH the original Verified Source Ledger (entries that passed) AND this Replacement Source Ledger (new entries S36+). Check the Convergence Status after refine runs again."
+> "The Convergence Dashboard above shows this iteration's verdict based on the refine output I just consumed. If CONVERGED, the loop can exit. If NOT CONVERGED and iteration < 3, feed BOTH the original Verified Source Ledger (entries that passed) AND this Replacement Source Ledger (new entries S36+) into `/411-refine` for re-verification, then re-invoke me with the new refine output to produce the next iteration's dashboard."
 
 ## Strict Constraints
 

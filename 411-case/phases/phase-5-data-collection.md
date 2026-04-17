@@ -83,17 +83,23 @@ If conflicts or low-confidence findings exist, review them with the user: "These
 
 ## Step 2.5: Re-Research Loop (if option a)
 
-If the user chooses to re-research failed sources:
+If the user chooses to re-research failed sources, orchestrate iterations of reresearch → refine → reresearch. **The Convergence Dashboard is produced by `/411-reresearch`, not `/411-refine`** — read convergence verdict from the reresearch output at the end of each iteration.
 
-1. Feed the full `/411-refine` output into `/411-reresearch`. It will parse the Verification Dashboard and Source Ledger, triage failures by priority, and run targeted searches using differentiated strategies.
-2. Feed the `/411-reresearch` output (replacement sources) back into `/411-refine` for re-verification. Provide BOTH the original verified sources (entries that passed) AND the new replacement sources.
-3. Check the **Convergence Dashboard** in the new `/411-refine` output.
-4. If NOT CONVERGED and iteration < 3, repeat from step 1.
-5. Present the final Convergence Status to the user before proceeding to Step 3.
+For each iteration N (max 3):
 
-Name re-research outputs with iteration numbers:
+1. Feed the latest `/411-refine` output into `/411-reresearch`. It parses the Verification Dashboard and Verified Source Ledger, triages failures by priority, runs targeted searches using differentiated strategies, and emits a **Convergence Dashboard** for iteration N with verdict CONVERGED / NOT CONVERGED / CONVERGED WITH CAVEATS.
+2. Read the Convergence Status from the `/411-reresearch` output.
+   - If **CONVERGED** → exit loop, proceed to Step 3.
+   - If **NOT CONVERGED** and N < 3 → continue to step 3 below.
+   - If N = 3 → hard stop; reresearch will declare **CONVERGED WITH CAVEATS** and document remaining gaps in its Residual Risk section. Exit loop.
+3. Feed the `/411-reresearch` Replacement Source Ledger back into `/411-refine` for re-verification. Provide BOTH the original verified sources (entries that passed) AND the new replacement sources.
+4. Return to step 1 with iteration N+1.
+
+Present the final Convergence Status (from the last reresearch run) to the user before proceeding to Step 3.
+
+Name iteration outputs:
 - `{case-prefix}-reresearch-iteration{n}.md`
-- `{case-prefix}-refine-reresearch.md` (or `-iteration{n}` if multiple refine passes)
+- `{case-prefix}-refine-iteration{n}.md` (for each refine re-verification pass)
 
 Save all to the working directory.
 

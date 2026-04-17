@@ -13,9 +13,9 @@
 | 5 | `research-assumptions-{ids}` | .md | Batched assumption research |
 | 5 | `research-assumption{id}` | .md | Single assumption deep-dive |
 | 5 | `research-phase5-gaps` | .md | Gap analysis after initial research |
-| 5 | `research-phase5-refined` | .md | Verification pass (via /411-refine) |
-| 5 | `reresearch-iteration{n}` | .md | Re-research iterations |
-| 5 | `refine-reresearch` | .md | Verification of replacement sources |
+| 5 | `refine-initial` | .md | Initial verification pass (via /411-refine) |
+| 5 | `reresearch-iteration{n}` | .md | Re-research iterations (via /411-reresearch) |
+| 5 | `refine-iteration{n}` | .md | Refine re-verification of each iteration's replacements |
 | 5 | `model-inputs-research` | .md | Financial model inputs (if model planned) |
 | 5 | `model-inputs-refined` | .md | Model inputs verification |
 | 5 | `model-inputs-reresearch` | .md | Model inputs re-research |
