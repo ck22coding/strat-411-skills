@@ -35,7 +35,7 @@ Interactive case analysis agent that walks through 6 phases:
 | 4 | Research Planning | Match assumptions to analysis types, build mock slides, scope data needs. |
 | 4.5 | TA Feedback | Checkpoint for instructor/TA review before data collection. |
 | 5 | Data Collection | Batched research, verification loops, evidence stitching. |
-| 6 | Deck Construction | Apply SCQA + Pyramid to slides. Produce handoff for 411-deck. |
+| 6 | Deck Construction | Apply SCQA + Pyramid to slides. Produce a signed `*-deck-spec.md` handoff for 411-deck. |
 
 Includes 12 reference files covering strategic theory (rugged landscapes, Schumpeterian competition, dynamic capabilities, platform strategy, competitive positioning) and analytical techniques.
 
@@ -74,6 +74,8 @@ Produces a .pptx presentation deck from a structured handoff spec file (`*-deck-
 - Chart construction
 - Formatting standards enforcement
 - 411-specific QA checks
+
+**Signed handoff contract.** 411-case Phase 6 signs the deck-spec by writing a sha256 hash of the argument fields into frontmatter. 411-deck's first phase runs `deck_signature.py --verify` and only builds on a valid signature — mismatched or missing signatures prompt the user to rebuild, proceed anyway, or abort. This keeps the two skills loosely coupled: 411-deck trusts the contract instead of re-validating argument structure.
 
 ## Installation
 
