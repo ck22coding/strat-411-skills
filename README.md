@@ -77,6 +77,10 @@ Produces a .pptx presentation deck from a structured handoff spec file (`*-deck-
 
 **Signed handoff contract.** 411-case Phase 6 signs the deck-spec by writing a sha256 hash of the argument fields into frontmatter. 411-deck's first phase runs `deck_signature.py --verify` and only builds on a valid signature — mismatched or missing signatures prompt the user to rebuild, proceed anyway, or abort. This keeps the two skills loosely coupled: 411-deck trusts the contract instead of re-validating argument structure.
 
+### sources-cited
+
+Tracks every source collected during research and exports a formatted .docx bibliography. 411-case calls it during research phases to keep the citation trail; it also works on its own for any research task that needs source attribution.
+
 ## Installation
 
 These are [Claude Code skills](https://docs.anthropic.com/en/docs/claude-code). To use them:
